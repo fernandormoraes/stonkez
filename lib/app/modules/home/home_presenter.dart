@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:stonkez/app/app_store.dart';
@@ -23,21 +25,46 @@ class HomePresenter {
         loadFavorites.runUseCase();
       });
     });
+
+    store.timer = Timer(const Duration(seconds: 5), () {
+      updateStatusStock();
+    });
   }
 
   Future<void> getStockByQuery(String query) async {
-    store.searchedStock = null;
+    try {
+      store.searchedStock = null;
 
-    Either<String, Stock> returnedUseCase =
-        await getStockByName.runUseCase(query);
+      store.isLoading = true;
 
-    if (returnedUseCase.isRight()) {
-      store.searchedStock = returnedUseCase.asRight;
-    } else {
-      store.exceptionMessage = returnedUseCase.asLeft;
+      Either<String, Stock> returnedUseCase =
+          await getStockByName.runUseCase(query);
+
+      if (returnedUseCase.isRight()) {
+        store.searchedStock = returnedUseCase.asRight;
+      } else {
+        store.exceptionMessage = returnedUseCase.asLeft;
+      }
+
+      isStockFavorite();
+    } finally {
+      store.isLoading = false;
+    }
+  }
+
+  Future<void> updateStatusStock() async {
+    if (store.queryController.text.isNotEmpty && store.searchedStock != null) {
+      Either<String, Stock> returnedUseCase =
+          await getStockByName.runUseCase(store.queryController.text);
+
+      if (returnedUseCase.isRight()) {
+        store.searchedStock = returnedUseCase.asRight;
+      }
     }
 
-    isStockFavorite();
+    store.timer = Timer(const Duration(seconds: 5), () {
+      updateStatusStock();
+    });
   }
 
   Future<void> addNewFavorite() async {

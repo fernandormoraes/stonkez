@@ -27,12 +27,20 @@ class HomePage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 16, left: 24, right: 24),
               child: TextFormField(
+                maxLength: 7,
                 controller: store.queryController,
                 onFieldSubmitted: (value) => presenter.getStockByQuery(value),
                 onChanged: (value) =>
                     value.isEmpty ? store.searchedStock = null : null,
                 decoration: InputDecoration(
-                    suffixIcon: const Icon(Icons.search),
+                    counterText: '',
+                    counterStyle: const TextStyle(height: 0),
+                    suffixIcon: InkWell(
+                        onTap: () {
+                          presenter.getStockByQuery(store.queryController.text);
+                          FocusScope.of(context).unfocus();
+                        },
+                        child: const Icon(Icons.search)),
                     contentPadding: const EdgeInsets.all(8),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8))),
@@ -55,7 +63,7 @@ class HomePage extends StatelessWidget {
                                     store.searchedStock!.name,
                                     overflow: TextOverflow.fade,
                                     style: TextStyle(
-                                        fontSize: 24,
+                                        fontSize: 28,
                                         color: Colors.grey.shade900,
                                         fontWeight: FontWeight.bold),
                                   ),
@@ -73,35 +81,48 @@ class HomePage extends StatelessWidget {
                                 })
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            StockValuesCard(
-                                child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            Row(
                               children: [
                                 Text(
-                                  'Price: \$${store.searchedStock!.price}',
+                                  '\$${store.searchedStock!.price}',
                                   style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 22,
                                       color: Colors.grey.shade800),
                                 ),
-                                const SizedBox(height: 6),
+                                store.searchedStock!.changeIsNegative
+                                    ? const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: Colors.red)
+                                    : const Icon(
+                                        Icons.keyboard_arrow_up_rounded,
+                                        color: Colors.green),
                                 Text(
-                                  'Total Volume: ${store.searchedStock!.totalVol}',
+                                  '${store.searchedStock!.changePercentage.replaceAll('-', '')}%',
                                   style: TextStyle(
                                       fontSize: 16,
-                                      color: Colors.grey.shade800),
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          store.searchedStock!.changeIsNegative
+                                              ? Colors.red
+                                              : Colors.green),
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(width: 8),
                                 Text(
-                                  'Change Percentage: ${store.searchedStock!.changePercentage}',
+                                  store.searchedStock!.changePoint
+                                      .replaceAll('-', ''),
                                   style: TextStyle(
                                       fontSize: 16,
-                                      color: Colors.grey.shade800),
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          store.searchedStock!.changeIsNegative
+                                              ? Colors.red
+                                              : Colors.green),
                                 ),
                               ],
-                            )),
+                            ),
+                            const SizedBox(height: 8),
                             Padding(
-                              padding: const EdgeInsets.only(top: 24.0),
+                              padding: const EdgeInsets.only(top: 8.0),
                               child: StockValuesCard(
                                 height: 160,
                                 child: Column(
@@ -250,14 +271,23 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                   )
-                : Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(store.exceptionMessage ?? ''),
-                      ],
-                    ),
-                  )
+                : store.isLoading
+                    ? const Expanded(
+                        child: Center(child: CircularProgressIndicator()))
+                    : Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            store.exceptionMessage != null
+                                ? const Icon(
+                                    Icons.broken_image,
+                                    size: 48,
+                                  )
+                                : Container(),
+                            Text(store.exceptionMessage ?? ''),
+                          ],
+                        ),
+                      )
           ],
         );
       }),

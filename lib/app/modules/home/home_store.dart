@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mobx/mobx.dart';
 import 'package:stonkez/app/domain/entities/stock.dart';
@@ -17,6 +19,11 @@ abstract class HomeStoreBase with Store {
 
   @observable
   bool isFavorite = false;
+
+  @observable
+  bool isLoading = false;
+
+  Timer? timer;
 
   @action
   void setIsFavorite() {
