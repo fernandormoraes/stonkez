@@ -10,6 +10,8 @@ class Stock {
   final String week52RangeLower;
   final String week52RangeHigher;
 
+  bool get changeIsNegative => changePercentage.contains('-');
+
   Stock(
       this.name,
       this.price,
