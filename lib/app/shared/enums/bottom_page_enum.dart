@@ -1,0 +1,1 @@
+enum BottomPage { home, favorites }
